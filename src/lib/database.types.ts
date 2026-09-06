@@ -39,6 +39,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      nutrition_targets: {
+        Row: {
+          bmr: number
+          calorie_target: number
+          carb_g: number
+          created_at: string
+          effective_from: string
+          fat_g: number
+          id: string
+          inputs: Json
+          protein_g: number
+          source: Database["public"]["Enums"]["target_source"]
+          tdee: number
+          user_id: string
+        }
+        Insert: {
+          bmr: number
+          calorie_target: number
+          carb_g: number
+          created_at?: string
+          effective_from: string
+          fat_g: number
+          id?: string
+          inputs: Json
+          protein_g: number
+          source: Database["public"]["Enums"]["target_source"]
+          tdee: number
+          user_id: string
+        }
+        Update: {
+          bmr?: number
+          calorie_target?: number
+          carb_g?: number
+          created_at?: string
+          effective_from?: string
+          fat_g?: number
+          id?: string
+          inputs?: Json
+          protein_g?: number
+          source?: Database["public"]["Enums"]["target_source"]
+          tdee?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           activity_level: Database["public"]["Enums"]["activity_level"] | null
@@ -101,6 +146,7 @@ export type Database = {
       activity_level: "sedentary" | "light" | "moderate" | "very" | "extra"
       gender: "male" | "female"
       goal: "lose_fat" | "maintain" | "gain_muscle" | "custom"
+      target_source: "calculated" | "custom"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -234,6 +280,7 @@ export const Constants = {
       activity_level: ["sedentary", "light", "moderate", "very", "extra"],
       gender: ["male", "female"],
       goal: ["lose_fat", "maintain", "gain_muscle", "custom"],
+      target_source: ["calculated", "custom"],
     },
   },
 } as const

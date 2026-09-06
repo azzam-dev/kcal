@@ -86,6 +86,40 @@ export const ar = {
   "field.passwordTooLong": "كلمة المرور طويلة جداً. جرّب كلمة أقصر.",
   "field.displayNameTooLong": "اسم العرض ٦٠ حرفاً كحد أقصى.",
 
+  // ── مدخلات حساب الهدف ────────────────────────────────────────────────────
+  // One message per value of `InputIssue` in features/nutrition/domain/types.ts.
+  // The bounds are written into the sentences rather than passed in as
+  // placeholders, exactly as the password rules above are: every other message
+  // in this file reads that way, and a bound that moves gets its sentence
+  // reread anyway.
+  "field.ageBelowMinimum": "هذا التطبيق لمن عمره ١٦ سنة فأكثر.",
+  "field.ageImplausible": "سنة الميلاد خارج النطاق المتوقَّع. تحقّق منها.",
+  "field.heightOutOfRange": "أدخل طولاً بين ٩٠ و٢٥٠ سم.",
+  "field.weightOutOfRange": "أدخل وزناً بين ٢٠ و٤٠٠ كجم.",
+  "field.targetWeightRequired": "أدخل الوزن الذي تستهدفه.",
+  "field.targetWeightOutOfRange": "أدخل وزناً مستهدفاً بين ٢٠ و٤٠٠ كجم.",
+  "field.customRateRequired": "أدخل معدّل التغيّر الأسبوعي الذي تريده.",
+  "field.customRateOutOfRange":
+    "أقصى معدّل هو كيلوغرام واحد في الأسبوع، صعوداً أو نزولاً.",
+
+  // ── تعديلات الحساب ───────────────────────────────────────────────────────
+  // One message per value of `AdjustmentReason`. The engine never returns a
+  // number it had to change without saying which and why; these are the sentences
+  // that carry that "why" to the user. They are written to state what was done
+  // and the reason for it — not to fault the person for the answer they gave.
+  "adjustment.deficitCapped":
+    "رفعنا هدفك إلى أكبر عجز نسمح به: النزول أسرع من ذلك يأتي على حساب العضلات، ويصعب الاستمرار عليه.",
+  "adjustment.surplusCapped":
+    "خفّضنا هدفك إلى أكبر زيادة نسمح بها: ما فوقها يتحوّل دهناً أكثر مما يبني عضلاً.",
+  "adjustment.calorieFloorApplied":
+    "رفعنا هدفك إلى أقل قدر يومي يُنصح به دون إشراف مختص، فالحساب كان ينزل تحته.",
+  "adjustment.macrosRebalanced":
+    "لم يتّسع هذا الهدف للقدر المفضّل من البروتين والدهون معاً، فقرّبناهما منه بالتساوي.",
+  "adjustment.macrosBelowFloor":
+    "هذا الهدف لا يغطّي الحد الأدنى من البروتين والدهون، فلم يبقَ شيء للكربوهيدرات. راجع معلوماتك، وإن كانت صحيحة فاستشر مختص تغذية.",
+  "adjustment.targetWeightUnderweight":
+    "الوزن الذي اخترته أقل من النطاق الصحي لطولك. لم نغيّر أرقامك، ونقترح مراجعة مختص قبل المضي فيه.",
+
   // ── الأخطاء ──────────────────────────────────────────────────────────────
   "error.generic": "تعذّر إتمام العملية. حاول مرة أخرى.",
   "error.invalidCredentials": "البريد أو كلمة المرور غير صحيحة.",

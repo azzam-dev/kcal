@@ -7,9 +7,10 @@
 الخطة الكاملة في [docs/PLAN.md](./docs/PLAN.md)، والقرارات ومبرراتها في
 [docs/DECISIONS.md](./docs/DECISIONS.md)، وأعراف الكود في [CLAUDE.md](./CLAUDE.md).
 
-**الحالة: المراحل ٠١ و٠٢ و٠٣ من ١٢ مكتملة ومدفوعة.** الشجرة نظيفة، CI أخضر،
+**الحالة: المراحل ٠١ و٠٢ و٠٣ من ١٢ مكتملة ومدفوعة، والمرحلة ٠٤ بدأت.** CI أخضر،
 ١٣٥ اختبار وحدة يمر، و١٢ اختبار RLS مكتوبة تنتظر مفتاحاً لتشغيلها.
-المرحلة التالية هي ٠٤ (Onboarding والأهداف)، **ولا شيء يحجبها**.
+من المرحلة ٠٤ أُنجز بندان — مفاتيح i18n الناقصة، وجدول `nutrition_targets` المطبَّق
+على القاعدة الحية — و**كلاهما غير مدفوع بعد**. انظر «قيد العمل».
 
 **المشروع الحي:** Supabase ref `xwmnvwveoxgajyzbbsja` (فرانكفورت `eu-central-1`).
 **المستودع:** `azzam-dev/kcal`، الفرع الإنتاجي `main`. **لم يُنشر على Vercel بعد.**
@@ -152,19 +153,31 @@
 
 ## قيد العمل
 
-**لا شيء نصف مكتوب. الشجرة نظيفة وكل شيء مدفوع** (آخر كوميت `a0ab41d`).
+**المرحلة ٠٤ قيد التنفيذ، وما أُنجز منها غير مدفوع.** آخر كوميت `4f3b1b2`، وفي
+الشجرة تعديلات غير مُلتزَمة: `src/i18n/ar.ts` (معدَّل)، و`src/features/nutrition/messages.ts`
+(جديد)، و`supabase/migrations/20260906152058_create_nutrition_targets.sql` (جديد)،
+و`src/lib/database.types.ts` (مُعاد توليده). البوابة الرباعية خضراء.
 
-آخر ما أُنجز كان تطبيق الـmigrations وتوليد `src/lib/database.types.ts` وربطه بالعملاء
-الثلاثة، ثم إضافة `src/lib/database-contract.test.ts`. كلها مكتملة ومُختبَرة.
+**مفاتيح i18n — تمت.** رسالة عربية لكل قيمة في `AdjustmentReason` (مساحة `adjustment.`)
+وفي `InputIssue` (مساحة `field.`)، و`src/features/nutrition/messages.ts` يحوّل الرمز
+إلى مفتاح. المحوّلان `Record` **كامل** لا `Partial` كالذي في `lib/validation/messages.ts`:
+ذاك يفهرس رموز Zod المفتوحة فيحتاج بديلاً، وهذان يفهرسان اتحادين مغلقين — فقيمة تُضاف
+بلا رسالة **خطأ ترجمة**، لا رمز خام يظهر على الشاشة. الملف خارج `domain/` لأنه يحتاج
+`MessageKey` والمحرك يجب ألا يحتاجه، و`architecture.test.ts` لا يفحص إلا `domain/` نفسه.
 
-**البند التالي لم يبدأ.** موقعه بالضبط:
+**جدول `nutrition_targets` — تم.** مطبَّق على القاعدة الحية ومتحقَّق منه بالاستعلام:
+RLS مفعَّلة، سياستان فقط (`select` و`insert`)، صلاحيات `authenticated` = `SELECT,INSERT`
+و`anon` صفر، وكل قيود `CHECK` موجودة، والجدول فارغ. **لا `update` ولا `delete`** —
+لا سياسة ولا صلاحية، فالإلحاقية مفروضة لا موصوفة. `source` نوع enum
+(`public.target_source`) لا نص بـ`CHECK`، ليأتي مُنمَّطاً في `database.types.ts` فيصير
+الخطأ المطبعي خطأ ترجمة. `effective_from` **بلا `default current_date`** عمداً: الافتراضي
+سيكون اليوم بتوقيت UTC، و«اليوم» محلي للمستخدم، فالمستدعي هو من يقوله.
 
-- **لا يوجد** `supabase/migrations/*_create_nutrition_targets.sql`
-- **لا يوجد** `src/server/targets.ts`
-- **لا يوجد** `src/app/(onboarding)/`
-- **`src/i18n/ar.ts` ينقصه** مفاتيح رسائل لكل قيمة في `AdjustmentReason` و`InputIssue`
-  (المعرَّفتان في `src/features/nutrition/domain/types.ts`). المحرك يُنتج هذه الرموز اليوم
-  **ولا يوجد أي نص يعرضها للمستخدم** — وهذه أول فجوة يجب سدّها في المرحلة ٠٤.
+**لم تُرندَر أي من هذه الرسائل بعد** — لا شاشة تستهلك `messages.ts` حتى تُبنى شاشة
+النتيجة (البند ٣ أدناه). ولا اختبار وحدة له: `MessageKey` مع `Record` الكامل يغطيان
+عند الترجمة ما كان الاختبار سيتحقّق منه عند التشغيل.
+
+**ما لم يبدأ بعد:** `src/server/targets.ts` و`src/app/(onboarding)/` — البندان ٢ و٣.
 
 ---
 
@@ -172,25 +185,9 @@
 
 ### المرحلة ٠٤ — Onboarding والأهداف (لا شيء يحجبها، ابدأ مباشرة)
 
-**١. Migration جديدة:**
-
-```bash
-npx supabase migration new create_nutrition_targets
-```
-
-جدول `public.nutrition_targets` **إلحاقي لا يُحدَّث أبداً** (تعديل الهدف يكتب صفاً جديداً
-بتاريخ سريان جديد، فلا تتغير الأيام السابقة):
-
-`id` · `user_id` (FK `auth.users` مع `on delete cascade`) · `effective_from date` ·
-`bmr` · `tdee` · `calorie_target` · `protein_g` · `carb_g` · `fat_g` ·
-`source` (`'calculated'|'custom'`) · `inputs jsonb` (لقطة المدخلات) · `created_at`.
-
-- `UNIQUE(user_id, effective_from)`
-- RLS: `select` و`insert` للمالك فقط عبر `(select auth.uid()) = user_id`.
-  **لا `update` ولا `delete`** — هذا ما يجعل الجدول إلحاقياً فعلاً لا اصطلاحاً.
-- صلاحيات: `revoke all ... from anon, authenticated;` ثم `grant select, insert to authenticated;`
-
-ثم `npm.cmd run db:push` و`npm.cmd run db:types`.
+**١. Migration جديدة — تمت.** `supabase/migrations/20260906152058_create_nutrition_targets.sql`،
+مطبَّقة على القاعدة الحية (`supabase migration list` يُظهر المحلي = البعيد للثلاث)،
+و`src/lib/database.types.ts` مُعاد توليده. الأعمدة والقيود والصلاحيات كما في «قيد العمل» أعلاه.
 
 **٢. `src/server/targets.ts`** — استعلامات فقط، بلا قواعد عمل:
 `getCurrentTarget()` (الصف الأحدث بـ`effective_from <= today`) و`insertTarget(row)`.
@@ -210,10 +207,9 @@ npx supabase migration new create_nutrition_targets
 كتابة `profiles` و`nutrition_targets` ← `onboarded_at = now()`.
 ترجع `{ errorKey?, noticeKey? }` كبقية الـactions.
 
-**٥. مفاتيح i18n الناقصة:** أضف إلى `src/i18n/ar.ts` رسالة لكل قيمة في `AdjustmentReason`
-(`deficit_capped` · `surplus_capped` · `calorie_floor_applied` · `macros_rebalanced` ·
-`macros_below_floor` · `target_weight_underweight`) وفي `InputIssue`، ثم دالة تحويل
-كالموجودة في `lib/validation/messages.ts`. **الصياغة خالية من اللوم** — قرار موثَّق.
+**٥. مفاتيح i18n الناقصة — تمت.** الرسائل في `src/i18n/ar.ts` ودالتا التحويل في
+`src/features/nutrition/messages.ts`. الصياغة خالية من اللوم: تذكر ما فُعل وسببه،
+لا ما أخطأ فيه المستخدم. التفصيل في «قيد العمل» أعلاه.
 
 **٦. أعِد توجيه المستخدم غير المُهيَّأ:** صفحة محمية و`onboarded_at` فارغ ← `/onboarding`.
 
