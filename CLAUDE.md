@@ -1,8 +1,10 @@
-# kcal
+# NUTRIVA
 
 تطبيق ويب عربي، جوال-أولاً، لتتبع السعرات والعناصر الغذائية الكبرى.
+(`kcal` اسم المجلد المحلي والمستودع فقط — الاسم الظاهر `NUTRIVA` نص في القاموس.)
 
-**المراحل ٠١–٠٣ من ١٢ مكتملة.** اقرأ [PROGRESS.md](./PROGRESS.md) لحالة العمل،
+**المراحل ٠١–٠٣ من ١٢ مكتملة، والمرحلة ٠٤ نصفها منجز** (الطبقة الخلفية للأهداف تمّت،
+وشاشات Onboarding لم تبدأ). اقرأ [PROGRESS.md](./PROGRESS.md) لحالة العمل،
 و[docs/PLAN.md](./docs/PLAN.md) للخطة، و[docs/DECISIONS.md](./docs/DECISIONS.md) للقرارات
 ومبرراتها. هذا الملف يصف **الأعراف المتّبعة فعلاً في الكود القائم** — لا المستهدفة.
 
@@ -42,15 +44,20 @@ npm run db:types   # يعيد توليد src/lib/database.types.ts
 ```
 src/app/globals.css       التوكنز في @theme + قواعد عامة (focus-visible، .nums)
 src/app/layout.tsx        <html lang="ar" dir="rtl"> + الخط، كلها من src/i18n لا مكتوبة يدوياً
-src/app/page.tsx          الصفحة العامة
-src/app/(auth)/           layout + login · register · check-email · forgot-password
-                            · reset-password، وactions.ts فيه كل server actions المصادقة
+src/app/page.tsx          الصفحة العامة (قفلة العلامة: الاسم + الشعار الإنجليزي)
+src/app/manifest.ts       manifest التطبيق، مولَّد من القاموس لا ملف JSON في public/
+src/app/icon.svg          أيقونة التبويب. لا شرطتين متتاليتين في تعليقاتها (XML)
+src/app/apple-icon.tsx    أيقونة iOS، PNG مولَّد بـImageResponse — iOS لا يقبل SVG
+src/app/(auth)/           layout + login · register · forgot-password · reset-password،
+                            وactions.ts فيه كل server actions المصادقة
 src/app/(app)/            layout الشريط العلوي + profile (اسم العرض، حذف الحساب)
-src/app/auth/confirm/     Route Handler يستبدل رمز الرابط المُرسَل بالبريد بجلسة
+src/app/auth/confirm/     Route Handler لروابط البريد. يقبل ?code= و?token_hash= معاً
+                            لأن شكل الرابط يقرره قالب في لوحة Supabase لا الكود
 src/proxy.ts              بوابة الجلسة (اصطلاح Next 16، وليس middleware.ts)
 src/components/ui.tsx     Button · Card · Field · Alert — البدائل الأربعة الوحيدة
 src/i18n/ar.ts            قاموس الرسائل العربي — كل نص يراه المستخدم
 src/i18n/index.ts         Locale · DIRECTION · translate() · getMessages()
+src/lib/brand.ts          اللونان الوحيدان خارج CSS (manifest وأيقونة) — مرآة للتوكنز
 src/lib/env.ts            متغيرات البيئة، مفحوصة عند الاستيراد
 src/lib/errors.ts         رمز خطأ Supabase ← مفتاح رسالة
 src/lib/redirect.ts       safeRedirectPath — حماية من open redirect
@@ -60,7 +67,10 @@ src/lib/database.types.ts مولَّد — لا يُحرَّر يدوياً. أ�
 src/lib/database-contract.test.ts  يحرس تطابق أنواع الدومين مع enums القاعدة
 src/features/nutrition/domain/   محرك الحساب — تايبسكربت نقي، لا React ولا Supabase
                                    types · bmr · tdee · goal · macros · index
+src/features/nutrition/messages.ts  رمز المحرك ← مفتاح رسالة. خارج domain/ عمداً
 src/server/profile.ts     استعلامات profiles، بلا قواعد عمل
+src/server/targets.ts     استعلامات nutrition_targets — getCurrentTarget · insertTarget
+tests/integration/actors.ts  حسابات الاختبار وعملاؤها، مشتركة بين كل اختبارات RLS
 tests/integration/rls/    اختبارات عزل المستخدمين — تحتاج مشروعاً حياً ومفتاح service_role
 supabase/migrations/      مصدر الحقيقة للـschema
 ```
@@ -73,6 +83,12 @@ supabase/migrations/      مصدر الحقيقة للـschema
 - **كل نص يراه المستخدم يمر عبر `src/i18n/ar.ts`.** لا نص عربي مكتوب داخل مكوّن.
   الاستدعاء `const t = getMessages()` ثم `t("key")` أو `t("key", { n: 5 })`.
   المفاتيح مُنمَّطة، فالمفتاح الناقص خطأ ترجمة لا خطأ وقت تشغيل.
+- **السجل عامية سعودية بيضاء، لا فصحى.** وثلاثة استثناءات: رسائل الأخطاء وأمان الحساب
+  قصيرة صريحة، ومصطلحات التغذية كما هي (بروتين · كارب · دهون · سعرة)، وإخلاء المسؤولية
+  الطبي جاد. القاعدة والاستثناءات مكتوبة في رأس `ar.ts` — **اقرأها قبل إضافة أي نص.**
+  وفوقها كلها: لا لوم للقارئ.
+- **`app.name` و`app.tagline` قفلة علامة واحدة**، والشعار إنجليزي عمداً ويُرندَر داخل
+  `<bdi lang="en" dir="ltr">`. **وصف الصفحة والـmanifest يقرآن `home.body` لا الشعار.**
 - **الألوان كلها توكنز.** `bg-canvas` `bg-surface` `text-ink` `text-ink-muted`
   `border-line` `text-accent` `text-protein/carbs/fat`. **لا لون صريح (hex) في أي مكوّن.**
 - **الاستيرادات:** ثلاث مجموعات مفصولة بسطر فارغ ومرتّبة أبجدياً داخل كل مجموعة:
@@ -92,6 +108,10 @@ supabase/migrations/      مصدر الحقيقة للـschema
   مجاملة للمستخدم لا ضابط أمني.
 - **كل صفحة محمية تفحص `getUser()` بنفسها** ثم `redirect("/login")`، رغم أن
   `proxy.ts` يحرس المسار أصلاً. حزام إضافي مقصود — أبقِه في كل صفحة جديدة.
+- **تأكيد البريد مطفأ في لوحة Supabase، والكود يفترض ذلك:** `signUp` يعيد التوجيه إلى
+  التطبيق مباشرة، ولا توجد شاشة «افحص بريدك». الحارس الوحيد سطرٌ يعرض رسالة إن لم ترجع
+  جلسة — أي إن أُعيد تشغيل المفتاح من اللوحة. **`/auth/confirm` باقٍ لاستعادة كلمة المرور،
+  وهي المسار الوحيد الذي ما زال يرسل بريداً.**
 - **التفويض في القاعدة:** استعلامات `src/server/*` لا تحوي فلتر ملكية للتفويض؛
   RLS تقصرها على صف المتصل. لا تُضف `where user_id = …` كأنه هو الحماية.
 - **أنواع الجداول من `database.types.ts` لا مكتوبة يدوياً.** عملاء Supabase الثلاثة
@@ -122,7 +142,19 @@ supabase/migrations/      مصدر الحقيقة للـschema
   وأصناف Tailwind مباشرة. هنا داكن-فقط بتوكنز مسمّاة. المشروعان لا يتشاركان نظام تصميم.
 - **لا تكتب `dir="rtl"` أو `lang="ar"` في أي مكان غير `layout.tsx`،** وهو يقرؤهما من
   `DIRECTION` و`DEFAULT_LOCALE` في `src/i18n`. تثبيتهما يدوياً يكسر السبب الوحيد لوجود
-  تلك البنية.
+  تلك البنية. **الاستثناء الوحيد:** وسم مقطع بلغة أجنبية داخل الصفحة — الشعار الإنجليزي
+  في `page.tsx` داخل `<bdi lang="en" dir="ltr">`. هذا وصف لمقطع لا إعلان لاتجاه التطبيق،
+  وبدونه تقع النقطة في آخر الجملة الإنجليزية على الطرف الخطأ.
+- **لا تكتب نصاً بالفصحى.** السجل عامية سعودية بيضاء، واستثناءاته الثلاثة مكتوبة في رأس
+  `src/i18n/ar.ts`. النص الجديد يطابق ما حوله، ولا يُترجَم لاحقاً.
+- **لا تُنشئ `public/`.** الـmanifest والأيقونات مولَّدة من `src/app/` لتقرأ الاسم والوصف
+  من القاموس. ملف JSON مرفوع يدوياً يحمل الاسم القديم بعد أول إعادة تسمية.
+- **لا تعيد بناء شاشة تأكيد البريد ولا زر إعادة الإرسال من الصفر.** كانا مبنيَّين
+  ومحذوفَين بقرار، وموجودان كاملَين في تاريخ git (`git log -- "src/app/(auth)/register/check-email"` — الكوميت `840e9da`).
+  إعادة تفعيل التأكيد = استرجاعهما + قلب المفتاح في اللوحة + تعديل قالب البريد.
+- **أي مسار يُطلب بلا جلسة يجب أن يُستثنى من `matcher` في `src/proxy.ts`.** البوابة تردّ
+  على أي مسار غير مستثنى بإعادة توجيه إلى `/login`. حصل فعلاً: `/manifest.webmanifest`
+  كان يُخدَم بصفحة تسجيل الدخول، **فيصير التطبيق غير قابل للتثبيت بلا أي خطأ في أي مكان.**
 - **لا تستخدم `.nums` على نص عادي.** هي للأرقام المصطفّة في أعمدة فقط.
 - **لا تُنشئ بديل واجهة (primitive) قبل أن ترندره شاشة فعلية.** `ui.tsx` فيه أربعة
   مكوّنات لأن الشاشات القائمة تستخدم أربعة، لا أكثر.
