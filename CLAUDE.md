@@ -30,17 +30,28 @@ npm test           # vitest run
 ## المجلدات القائمة
 
 ```
-src/app/globals.css     التوكنز في @theme + قواعد عامة (focus-visible، .nums)
-src/app/layout.tsx      <html lang="ar" dir="rtl"> + الخط، كلاهما من src/i18n لا مكتوبان يدوياً
-src/app/page.tsx        صفحة انتظار المرحلة ٠١
-src/components/ui.tsx   Button و Card — البدائل الوحيدة حتى الآن
-src/i18n/ar.ts          قاموس الرسائل العربي — كل نص يراه المستخدم
-src/i18n/index.ts       Locale · DIRECTION · translate() · getMessages()
-src/i18n/i18n.test.ts   اختبارات الترجمة
-supabase/migrations/    مصدر الحقيقة للـschema
+src/app/globals.css       التوكنز في @theme + قواعد عامة (focus-visible، .nums)
+src/app/layout.tsx        <html lang="ar" dir="rtl"> + الخط، كلها من src/i18n لا مكتوبة يدوياً
+src/app/page.tsx          الصفحة العامة
+src/app/(auth)/           layout + login · register · check-email · forgot-password
+                            · reset-password، وactions.ts فيه كل server actions المصادقة
+src/app/(app)/            layout الشريط العلوي + profile (اسم العرض، حذف الحساب)
+src/app/auth/confirm/     Route Handler يستبدل رمز الرابط المُرسَل بالبريد بجلسة
+src/proxy.ts              بوابة الجلسة (اصطلاح Next 16، وليس middleware.ts)
+src/components/ui.tsx     Button · Card · Field · Alert
+src/i18n/ar.ts            قاموس الرسائل العربي — كل نص يراه المستخدم
+src/i18n/index.ts         Locale · DIRECTION · translate() · getMessages()
+src/lib/env.ts            متغيرات البيئة، مفحوصة عند الاستيراد
+src/lib/errors.ts         رمز خطأ Supabase ← مفتاح رسالة
+src/lib/redirect.ts       safeRedirectPath — حماية من open redirect
+src/lib/supabase/         client (متصفح) · server (خادم) · session (منطق البوابة)
+src/lib/validation/       سكيمات Zod + issueKey
+src/server/profile.ts     استعلامات profiles، بلا قواعد عمل
+tests/integration/rls/    اختبارات عزل المستخدمين — تحتاج مشروعاً حياً
+supabase/migrations/      مصدر الحقيقة للـschema
 ```
 
-`src/features` و`src/server` مخطَّطان ولم يُنشآ. **لا تُنشئ مجلداً قبل أن تملأه.**
+`src/features` مخطَّط ولم يُنشأ. **لا تُنشئ مجلداً قبل أن تملأه.**
 
 ## Conventions المتّبعة فعلاً
 
@@ -55,6 +66,19 @@ supabase/migrations/    مصدر الحقيقة للـschema
   هذه الكثافة مقصودة وحمّالة معنى في هذا المشروع.
 - **التنسيق:** فواصل منقوطة، علامات تنصيص مزدوجة، عرض سطر 100.
   لا Prettier مثبَّت — طابق الملفات المجاورة.
+- **النماذج:** `useActionState` في مكوّن عميل، وserver action ترجع
+  `{ errorKey?, noticeKey? }`. **تعبر الحدودَ مفاتيحُ رسائل فقط، لا نصوص.**
+  حالة الانتظار من العنصر الثالث الذي يرجّعه `useActionState`، لا من `useFormStatus`.
+- **الأخطاء:** كل خطأ من Supabase يمر بـ`authErrorKey` أو `databaseErrorKey` في
+  `lib/errors.ts`، وهما يُفهرسان على **رمز** الخطأ لا على نصه، ويسجّلان الأصل في
+  الخادم. لا يصل نص خطأ خام إلى المستخدم أبداً.
+- **التحقق:** سكيما Zod على حدود الخادم داخل الـaction، ورسائلها **رموز قصيرة**
+  (`password_too_short`) يترجمها `issueKey` إلى مفتاح رسالة. التحقق في المتصفح
+  مجاملة للمستخدم لا ضابط أمني.
+- **كل صفحة محمية تفحص `getUser()` بنفسها** ثم `redirect("/login")`، رغم أن
+  `proxy.ts` يحرس المسار أصلاً. حزام إضافي مقصود — أبقِه في كل صفحة جديدة.
+- **التفويض في القاعدة:** استعلامات `src/server/*` لا تحوي فلتر ملكية للتفويض؛
+  RLS تقصرها على صف المتصل. لا تُضف `where user_id = …` كأنه هو الحماية.
 
 ## Don't
 
@@ -79,5 +103,18 @@ supabase/migrations/    مصدر الحقيقة للـschema
 - **لا تستخدم `.nums` على نص عادي.** هي للأرقام المصطفّة في أعمدة فقط.
 - **لا تُنشئ بديل واجهة (primitive) قبل أن ترندره شاشة فعلية.** `ui.tsx` فيه مكوّنان
   لأن الشاشة الوحيدة تستخدم مكوّنين.
-- **لا تربط زر "ابدأ" في `page.tsx` بمسار غير موجود.** هو معطَّل عمداً حتى تُبنى
-  `/register` في المرحلة ٠٢.
+- **لا توسّع `PUBLIC_ROUTES` في `lib/supabase/session.ts` بمطابقة بادئة.** المطابقة
+  تامّة عمداً: البادئة تجعل كل مسار فرعي يُضاف مستقبلاً عاماً بلا أن ينتبه أحد.
+- **لا تستورد مفتاح `service_role` في أي ملف تحت `src/`.** موضعه الوحيد
+  `tests/integration/env.ts`، ولإنشاء حسابات الاختبار لا لاختبار السلوك.
+  حذف الحساب يمر بدالة `delete_own_account()` في القاعدة تحديداً لهذا السبب.
+- **لا تبنِ رابط بريد من ترويسة `Host`.** استخدم `SITE_URL` من `lib/env.ts`.
+  ترويسة `Host` يتحكم بها المهاجم، وتسميمها يحوّل بريد إعادة التعيين إلى رمز
+  يُسلَّم لغيره.
+- **لا تضع بريداً إلكترونياً في أي مسار URL.** المسارات تُخزَّن في تاريخ المتصفح
+  وسجلات الخادم وترويسة `Referer`.
+- **لا تجعل استعادة كلمة المرور تفرّق بين بريد له حساب وبريد بلا حساب** — لا في
+  الرسالة ولا في المسار. الفرق يكشف من هو مستخدم للتطبيق.
+- **لا تستعمل `signOut` عبر رابط `<a>`.** هو تغيير حالة، ويمر بنموذج POST.
+- **لا تُطبّق قواعد كلمة مرور التسجيل على تسجيل الدخول.** حساب أُنشئ قبل تشديد
+  القواعد يجب أن يبقى قادراً على الدخول.

@@ -9,17 +9,15 @@ describe("translate", () => {
   });
 
   it("substitutes placeholders", () => {
-    expect(translate("home.buildStatus", { phase: 1, total: 12 })).toBe(
-      "قيد التطوير — المرحلة 1 من 12",
+    expect(translate("profile.signedInAs", { email: "a@b.test" })).toBe(
+      "مسجَّل الدخول بـ a@b.test",
     );
   });
 
   it("leaves a placeholder intact when no variable is supplied", () => {
-    // Visible `{total}` on screen names the missing variable. Silently emitting
+    // Visible `{email}` on screen names the missing variable. Silently emitting
     // an empty string would hide the bug from whoever is looking at the page.
-    expect(translate("home.buildStatus", { phase: 1 })).toBe(
-      "قيد التطوير — المرحلة 1 من {total}",
-    );
+    expect(translate("profile.signedInAs")).toBe("مسجَّل الدخول بـ {email}");
   });
 
   it("ignores variables the message does not use", () => {
