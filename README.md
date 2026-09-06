@@ -22,6 +22,24 @@
 - **Node 24** (مثبَّت في CI؛ التطوير المحلي جرى على 24.19.0)
 - npm 11
 
+### ملاحظة لمستخدمي PowerShell على ويندوز
+
+سياسة تنفيذ السكربتات الافتراضية `Restricted` تمنع تشغيل `npm.ps1` و`npx.ps1`،
+فيظهر الخطأ:
+
+```
+npm : File C:\Program Files\nodejs\npm.ps1 cannot be loaded because running
+scripts is disabled on this system.
+```
+
+**الحل بلا تغيير أي إعداد أمني:** استعمل اختصارات `.cmd` — `npm.cmd` و`npx.cmd`.
+تعمل مع نفس الأوامر بلا فرق.
+
+الحل الدائم (تغيير إعداد أمني في حسابك، قرارك أنت):
+`Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`.
+
+Git Bash وcmd.exe لا يتأثران بهذا أصلاً.
+
 ## التشغيل
 
 ```bash
@@ -61,11 +79,22 @@ npm run test:watch # vitest في وضع المراقبة
 
 **مصدر الحقيقة للـschema هو `supabase/migrations/`، لا المشروع الحي.**
 
+إعداد لمرة واحدة على كل جهاز — **بالترتيب**، وكل خطوة تفشل بلا التي قبلها:
+
 ```bash
-npx supabase link --project-ref <ref>   # مرة واحدة لكل جهاز
-npm run db:push                          # يطبّق الـmigrations غير المطبَّقة
-npm run db:diff                          # يقارن المشروع الحي بالملفات
-npm run db:types                         # يولّد src/lib/database.types.ts
+npx supabase login                      # يفتح المتصفح؛ الـCLI له تسجيل دخول مستقل
+npx supabase link --project-ref <ref>   # يسأل عن كلمة مرور القاعدة
+```
+
+كلمة مرور القاعدة تُضبط من لوحة Supabase ← Project Settings ← Database ←
+Reset database password. **لا تُكتب في أي ملف مُتتبَّع.**
+
+ثم:
+
+```bash
+npm run db:push    # يطبّق الـmigrations غير المطبَّقة
+npm run db:diff    # يقارن المشروع الحي بالملفات
+npm run db:types   # يولّد src/lib/database.types.ts
 ```
 
 **لا تعدّل القاعدة الحية يدوياً ولا عبر أدوات MCP.** أي تغيير schema يبدأ بملف:
