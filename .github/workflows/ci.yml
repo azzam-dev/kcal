@@ -36,10 +36,21 @@ jobs:
         run: npm test
 
       # Build last: it is the slowest step, and the three above catch most
-      # failures faster. Once the app reads Supabase, the NEXT_PUBLIC_* vars
-      # have to be supplied here too — they are inlined at build time.
+      # failures faster.
+      #
+      # The NEXT_PUBLIC_* values below are deliberate placeholders, not the real
+      # project's. src/lib/env.ts throws at import when they are missing, and a
+      # build has to get past that to prove the app compiles and prerenders.
+      # Placeholders keep this job hermetic: it never reaches the live project,
+      # and its output is never deployed — Vercel builds separately with the
+      # real values. Anything that needs a real database is an integration test,
+      # and those skip themselves when credentials are absent.
       - name: Build
         run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+          NEXT_PUBLIC_SITE_URL: http://localhost:3001
 
       # Blocks on critical advisories only. A high-severity advisory in a
       # transitive dependency with no published fix would otherwise halt all
