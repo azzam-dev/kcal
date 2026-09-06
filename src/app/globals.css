@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Design tokens.
+
+   ONE dark theme, on purpose — the product brief asks for dark-first, and a
+   half-built light theme is worse than none (that exact mistake in
+   graduationproj-web left dark-mode variables that nothing consumed). Every
+   colour in the app comes from a token here, so adding a light theme later is
+   redefining this block, not rewriting class names across the codebase.
+
+   Colour carries meaning and is not spent on decoration:
+     accent  → primary action, "on target"
+     danger  → destructive action, error
+     protein / carbs / fat → the macro triad, used ONLY for macro data
+   ─────────────────────────────────────────────────────────────────────────── */
+@theme {
+  --font-sans: var(--font-plex-arabic), "Segoe UI", system-ui, sans-serif;
+
+  /* surfaces — near-black with a slight green bias, not a neutral grey */
+  --color-canvas: #0d1110;
+  --color-surface: #141a18;
+  --color-surface-raised: #1b2321;
+  --color-line: #26302d;
+  --color-line-strong: #38443f;
+
+  /* text */
+  --color-ink: #e9efec;
+  --color-ink-muted: #94a29d;
+  --color-ink-faint: #6a7773;
+
+  /* semantic */
+  --color-accent: #45c7a8;
+  --color-accent-ink: #04231d; /* text ON the accent fill */
+  --color-accent-dim: #1e4f45;
+  --color-danger: #f2707f;
+  --color-danger-dim: #4a2028;
+
+  /* the macro triad — data only, never decoration */
+  --color-protein: #6fa9f0;
+  --color-carbs: #e8b04b;
+  --color-fat: #c98be0;
+
+  /* the one oversized figure the whole product exists to show */
+  --text-metric: 3.25rem;
+  --text-metric--line-height: 1;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Keyboard focus is defined once, globally. Components must not style their
+   own focus ring — that is how a codebase ends up with five different rings. */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Every figure in this app sits in a column with other figures. Proportional
+   digits make those columns wobble as values change. */
+.nums {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancel an in-flight run when the same branch is pushed again; only the newest
+# commit's result matters and CI minutes are finite.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      # Next 16 does not run ESLint during `next build`, so lint has to be its
+      # own step or it is not enforced anywhere.
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      # Build last: it is the slowest step, and the three above catch most
+      # failures faster. Once the app reads Supabase, the NEXT_PUBLIC_* vars
+      # have to be supplied here too — they are inlined at build time.
+      - name: Build
+        run: npm run build
+
+      # Blocks on critical advisories only. A high-severity advisory in a
+      # transitive dependency with no published fix would otherwise halt all
+      # work on the repo for something we cannot act on.
+      - name: Audit dependencies
+        run: npm audit --audit-level=critical

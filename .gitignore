@@ -1,0 +1,32 @@
+# dependencies
+/node_modules
+
+# next.js
+/.next/
+/out/
+next-env.d.ts
+
+# production
+/build
+
+# testing
+/coverage
+
+# environment — .env.example IS tracked, everything else is not
+.env
+.env*.local
+
+# supabase local state (the migrations/ folder IS tracked)
+/supabase/.branches
+/supabase/.temp
+
+# typescript
+*.tsbuildinfo
+
+# vercel
+.vercel
+
+# editors / os
+.DS_Store
+Thumbs.db
+*.swp

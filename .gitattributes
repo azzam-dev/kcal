@@ -1,0 +1,7 @@
+# Normalise line endings. Development is on Windows, CI runs on Ubuntu — without
+# this, every file committed from Windows lands in the repo with CRLF and shows
+# up as a whole-file diff the first time anyone touches it elsewhere.
+* text=auto eol=lf
+
+# Lockfiles are generated; keep them out of diff review noise.
+package-lock.json linguist-generated=true -diff
