@@ -2,30 +2,40 @@
 
 تطبيق ويب عربي، جوال-أولاً، لتتبع السعرات والعناصر الغذائية الكبرى.
 
-**المشروع في المرحلة ٠١ من ١٢.** الموجود سقالة فقط. اقرأ [PROGRESS.md](./PROGRESS.md)
-لحالة العمل، و[docs/PLAN.md](./docs/PLAN.md) للخطة، و[docs/DECISIONS.md](./docs/DECISIONS.md)
-للقرارات ومبرراتها. هذا الملف يصف **الأعراف المتّبعة فعلاً في الكود القائم** — لا المستهدفة.
+**المراحل ٠١–٠٣ من ١٢ مكتملة.** اقرأ [PROGRESS.md](./PROGRESS.md) لحالة العمل،
+و[docs/PLAN.md](./docs/PLAN.md) للخطة، و[docs/DECISIONS.md](./docs/DECISIONS.md) للقرارات
+ومبرراتها. هذا الملف يصف **الأعراف المتّبعة فعلاً في الكود القائم** — لا المستهدفة.
 
 ## Stack
 
 - Next.js 16.3.4 (App Router، Turbopack افتراضياً)، React 19.2.8، TypeScript 5.9 (`strict`
   + `noUncheckedIndexedAccess`)
 - Tailwind CSS v4 — التوكنز في `@theme` داخل `src/app/globals.css`، **لا ملف `tailwind.config.*`**
-- Vitest 5 للمنطق النقي
-- Supabase CLI كـdevDependency (`npx supabase`) — **لا مشروع Supabase بعد**
+- Supabase: Postgres + Auth + RLS. مشروع حي، ref `xwmnvwveoxgajyzbbsja` (فرانكفورت
+  `eu-central-1`). الـCLI كـdevDependency (`npx supabase`).
+- Zod 4 للتحقق، Vitest 5 للاختبارات
 - ESLint **9.39.5 مثبَّت عمداً** — انظر "Don't"
 
 ## الأوامر
 
 ```bash
-npm run dev        # Turbopack
+npm run dev        # Turbopack على المنفذ 3001
 npm run build      # لا يشغّل ESLint (Next 16 أسقطت ذلك)
 npm run typecheck  # tsc --noEmit
 npm run lint       # eslint
 npm test           # vitest run
+
+npm run db:push    # يطبّق migrations غير المطبَّقة على المشروع المربوط
+npm run db:types   # يعيد توليد src/lib/database.types.ts
 ```
 
-الأربعة معاً هي بوابة CI. **البناء الناجح وحده لا يعني أن اللينت نظيف.**
+الخمسة الأولى **عدا** `dev` هي بوابة CI. **البناء الناجح وحده لا يعني أن اللينت نظيف.**
+
+**على ويندوز/PowerShell:** سياسة `Restricted` تمنع `npm.ps1` و`npx.ps1`. استعمل
+`npm.cmd` و`npx.cmd`، أو Git Bash.
+
+**المنفذ 3001 مثبَّت في سكربت `dev` عمداً:** يجب أن يطابق `NEXT_PUBLIC_SITE_URL`، وإلا
+أشارت روابط البريد إلى منفذ لا يعمل.
 
 ## المجلدات القائمة
 
@@ -38,7 +48,7 @@ src/app/(auth)/           layout + login · register · check-email · forgot-pa
 src/app/(app)/            layout الشريط العلوي + profile (اسم العرض، حذف الحساب)
 src/app/auth/confirm/     Route Handler يستبدل رمز الرابط المُرسَل بالبريد بجلسة
 src/proxy.ts              بوابة الجلسة (اصطلاح Next 16، وليس middleware.ts)
-src/components/ui.tsx     Button · Card · Field · Alert
+src/components/ui.tsx     Button · Card · Field · Alert — البدائل الأربعة الوحيدة
 src/i18n/ar.ts            قاموس الرسائل العربي — كل نص يراه المستخدم
 src/i18n/index.ts         Locale · DIRECTION · translate() · getMessages()
 src/lib/env.ts            متغيرات البيئة، مفحوصة عند الاستيراد
@@ -46,14 +56,17 @@ src/lib/errors.ts         رمز خطأ Supabase ← مفتاح رسالة
 src/lib/redirect.ts       safeRedirectPath — حماية من open redirect
 src/lib/supabase/         client (متصفح) · server (خادم) · session (منطق البوابة)
 src/lib/validation/       سكيمات Zod + issueKey
+src/lib/database.types.ts مولَّد — لا يُحرَّر يدوياً. أعِد توليده بـnpm run db:types
+src/lib/database-contract.test.ts  يحرس تطابق أنواع الدومين مع enums القاعدة
 src/features/nutrition/domain/   محرك الحساب — تايبسكربت نقي، لا React ولا Supabase
                                    types · bmr · tdee · goal · macros · index
 src/server/profile.ts     استعلامات profiles، بلا قواعد عمل
-tests/integration/rls/    اختبارات عزل المستخدمين — تحتاج مشروعاً حياً
+tests/integration/rls/    اختبارات عزل المستخدمين — تحتاج مشروعاً حياً ومفتاح service_role
 supabase/migrations/      مصدر الحقيقة للـschema
 ```
 
-`src/features` مخطَّط ولم يُنشأ. **لا تُنشئ مجلداً قبل أن تملأه.**
+**لا تُنشئ مجلداً قبل أن تملأه.** `src/features/food` و`logging` و`weight` و`insights`
+مخطَّطة في PLAN.md ولم تُنشأ بعد.
 
 ## Conventions المتّبعة فعلاً
 
@@ -81,6 +94,9 @@ supabase/migrations/      مصدر الحقيقة للـschema
   `proxy.ts` يحرس المسار أصلاً. حزام إضافي مقصود — أبقِه في كل صفحة جديدة.
 - **التفويض في القاعدة:** استعلامات `src/server/*` لا تحوي فلتر ملكية للتفويض؛
   RLS تقصرها على صف المتصل. لا تُضف `where user_id = …` كأنه هو الحماية.
+- **أنواع الجداول من `database.types.ts` لا مكتوبة يدوياً.** عملاء Supabase الثلاثة
+  يأخذون `Database` كوسيط نوعي، فعمود غير موجود = خطأ ترجمة. **بعد كل migration:
+  `npm run db:types`** — بدونها تبقى الأنواع متأخرة عن الـschema بصمت.
 
 ## Don't
 
@@ -91,9 +107,14 @@ supabase/migrations/      مصدر الحقيقة للـschema
   "no longer supported" معروف ومقبول.
 - **لا ترفع TypeScript إلى 7.** الإصدار 7.0.2 صادر (النقل إلى Go) وغير مُتحقَّق منه مع
   Next 16 هنا. الترقية مهمة مستقلة بتحقق خاص بها، لا أثر جانبي لتحديث تبعيات.
-- **لا تعدّل قاعدة البيانات إلا بملف migration.** `npx supabase migration new <اسم>`.
-  الوصول المباشر للقاعدة الحية (لوحة التحكم أو أدوات MCP) هو بالضبط الدَّين الذي وقع فيه
-  `graduationproj-web` وجعل إعادة إنتاج الـschema مستحيلة.
+- **لا تعدّل schema القاعدة إلا بملف migration.** `npx supabase migration new <اسم>` ثم
+  `npm run db:push` ثم `npm run db:types`. الوصول المباشر للقاعدة الحية (لوحة التحكم أو
+  أدوات MCP) هو بالضبط الدَّين الذي وقع فيه `graduationproj-web` وجعل إعادة إنتاج الـschema
+  مستحيلة.
+- **لا تفترض أن `db push` مربوط.** يحتاج `npx supabase link --project-ref <ref>` مرة لكل
+  مجلد عمل، ويُتحقَّق من نجاحه بوجود `supabase/.temp/project-ref`. بدونه يفشل بـ
+  `Cannot find project ref`. **لا يحتاج كلمة مرور القاعدة** — الـCLI يهيّئ دور دخول عبر
+  واجهة الإدارة.
 - **لا تضف وضعاً فاتحاً.** المشروع ثيم داكن واحد عن قصد (المواصفات dark-first). في
   `graduationproj-web` بقيت متغيرات وضع داكن لا يستهلكها شيء حتى حُذفت. إضافة ثيم ثانٍ
   هنا = إعادة تعريف كتلة `@theme` وحدها، لأن كل لون توكن أصلاً — لكنها قرار منتج لا تحسين.
@@ -103,8 +124,13 @@ supabase/migrations/      مصدر الحقيقة للـschema
   `DIRECTION` و`DEFAULT_LOCALE` في `src/i18n`. تثبيتهما يدوياً يكسر السبب الوحيد لوجود
   تلك البنية.
 - **لا تستخدم `.nums` على نص عادي.** هي للأرقام المصطفّة في أعمدة فقط.
-- **لا تُنشئ بديل واجهة (primitive) قبل أن ترندره شاشة فعلية.** `ui.tsx` فيه مكوّنان
-  لأن الشاشة الوحيدة تستخدم مكوّنين.
+- **لا تُنشئ بديل واجهة (primitive) قبل أن ترندره شاشة فعلية.** `ui.tsx` فيه أربعة
+  مكوّنات لأن الشاشات القائمة تستخدم أربعة، لا أكثر.
+- **لا تحرّر `src/lib/database.types.ts` يدوياً** ولا تكتب شكل جدول بيدك في أي مكان.
+  الملف مولَّد، وأي تعديل يدوي يضيع عند أول `npm run db:types`.
+- **لا تجعل أنواع الدومين تُستورَد من `database.types.ts`.** الاستقلال مقصود، ويحرسه
+  `database-contract.test.ts` بدل الاستيراد: إضافة قيمة إلى enum في القاعدة بلا مقابل في
+  المحرك تكسر البناء بدل أن تُنتج `NaN` سعرة بصمت.
 - **لا توسّع `PUBLIC_ROUTES` في `lib/supabase/session.ts` بمطابقة بادئة.** المطابقة
   تامّة عمداً: البادئة تجعل كل مسار فرعي يُضاف مستقبلاً عاماً بلا أن ينتبه أحد.
 - **لا تستورد مفتاح `service_role` في أي ملف تحت `src/`.** موضعه الوحيد
