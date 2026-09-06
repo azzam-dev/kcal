@@ -1,12 +1,8 @@
-import { createClient, type SupabaseClient, type User } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import {
-  CAN_RUN_INTEGRATION,
-  PUBLISHABLE_KEY,
-  SERVICE_ROLE_KEY,
-  SUPABASE_URL,
-} from "../env";
+import { adminClient, anonymousClient, createActor, type Actor } from "../actors";
+import { CAN_RUN_INTEGRATION } from "../env";
 
 /**
  * The security test the whole design rests on.
@@ -20,44 +16,17 @@ import {
  * B's, and cannot forge a row of their own.
  */
 
-const PASSWORD = "integration-test-password";
-
-type Actor = { user: User; client: SupabaseClient };
-
 describe.skipIf(!CAN_RUN_INTEGRATION)("profiles row-level security", () => {
   let admin: SupabaseClient;
   let alice: Actor;
   let bob: Actor;
 
-  async function createActor(label: string): Promise<Actor> {
-    const email = `rls-${label}-${crypto.randomUUID()}@example.test`;
-
-    const { data, error } = await admin.auth.admin.createUser({
-      email,
-      password: PASSWORD,
-      // Skips the confirmation email. Confirmation stays ON for real sign-ups;
-      // this only avoids a mailbox in a test.
-      email_confirm: true,
-    });
-    if (error || !data.user) throw error ?? new Error(`could not create ${label}`);
-
-    const client = createClient(SUPABASE_URL!, PUBLISHABLE_KEY!, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
-    const { error: signInError } = await client.auth.signInWithPassword({
-      email,
-      password: PASSWORD,
-    });
-    if (signInError) throw signInError;
-
-    return { user: data.user, client };
-  }
-
   beforeAll(async () => {
-    admin = createClient(SUPABASE_URL!, SERVICE_ROLE_KEY!, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
-    [alice, bob] = await Promise.all([createActor("alice"), createActor("bob")]);
+    admin = adminClient();
+    [alice, bob] = await Promise.all([
+      createActor(admin, "alice"),
+      createActor(admin, "bob"),
+    ]);
   }, 30_000);
 
   afterAll(async () => {
@@ -148,9 +117,7 @@ describe.skipIf(!CAN_RUN_INTEGRATION)("profiles row-level security", () => {
   });
 
   it("shows nothing to a client with no session", async () => {
-    const anonymous = createClient(SUPABASE_URL!, PUBLISHABLE_KEY!, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
+    const anonymous = anonymousClient();
 
     const { data, error } = await anonymous.from("profiles").select("id");
 
@@ -178,8 +145,8 @@ describe.skipIf(!CAN_RUN_INTEGRATION)("profiles row-level security", () => {
   });
 
   it("deletes only the caller's own account", async () => {
-    const victim = await createActor("victim");
-    const survivor = await createActor("survivor");
+    const victim = await createActor(admin, "victim");
+    const survivor = await createActor(admin, "survivor");
 
     const { error } = await victim.client.rpc("delete_own_account");
     expect(error).toBeNull();
@@ -194,9 +161,7 @@ describe.skipIf(!CAN_RUN_INTEGRATION)("profiles row-level security", () => {
   }, 30_000);
 
   it("refuses delete_own_account to a client with no session", async () => {
-    const anonymous = createClient(SUPABASE_URL!, PUBLISHABLE_KEY!, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
+    const anonymous = anonymousClient();
 
     const { error } = await anonymous.rpc("delete_own_account");
     expect(error).not.toBeNull();
