@@ -9,15 +9,13 @@ describe("translate", () => {
   });
 
   it("substitutes placeholders", () => {
-    expect(translate("profile.signedInAs", { email: "a@b.test" })).toBe(
-      "مسجَّل الدخول بـ a@b.test",
-    );
+    expect(translate("profile.signedInAs", { email: "a@b.test" })).toBe("داخل بـ a@b.test");
   });
 
   it("leaves a placeholder intact when no variable is supplied", () => {
     // Visible `{email}` on screen names the missing variable. Silently emitting
     // an empty string would hide the bug from whoever is looking at the page.
-    expect(translate("profile.signedInAs")).toBe("مسجَّل الدخول بـ {email}");
+    expect(translate("profile.signedInAs")).toBe("داخل بـ {email}");
   });
 
   it("ignores variables the message does not use", () => {
@@ -38,7 +36,7 @@ describe("translate", () => {
 describe("getMessages", () => {
   it("binds a locale so call sites never pass one", () => {
     const t = getMessages("ar");
-    expect(t("app.name")).toBe("kcal");
+    expect(t("app.name")).toBe("NUTRIVA");
   });
 });
 

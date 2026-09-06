@@ -25,6 +25,11 @@ const AUTH_CODE_TO_KEY: Partial<Record<string, MessageKey>> = {
   invalid_credentials: "error.invalidCredentials",
   email_not_confirmed: "error.emailNotConfirmed",
   email_exists: "error.emailExists",
+  // Supabase rejects addresses its own validation dislikes — a domain with no
+  // MX record, for instance — after our schema has already accepted the format.
+  // Without this the user is told "something went wrong" about the one field
+  // they could actually fix.
+  email_address_invalid: "field.emailInvalid",
   user_already_exists: "error.emailExists",
   weak_password: "error.weakPassword",
   same_password: "error.samePassword",

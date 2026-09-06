@@ -24,7 +24,10 @@ const t = getMessages(DEFAULT_LOCALE);
 
 export const metadata: Metadata = {
   title: t("app.name"),
-  description: t("app.tagline"),
+  // `home.body`, not `app.tagline`: the tagline is the English half of the
+  // wordmark, and this string is what a search result and a shared link show to
+  // a reader who came here for an Arabic app.
+  description: t("home.body"),
 };
 
 export const viewport: Viewport = {

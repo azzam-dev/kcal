@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="NUTRIVA">
+  <!-- The colours are literals because a static SVG cannot import a token.
+       They are the canvas and accent tokens from globals.css; see
+       src/lib/brand.ts, which carries the same two values for the manifest.
+       (No double hyphens in this comment: they are illegal inside an XML
+       comment, and the whole file fails to parse rather than the comment.) -->
+  <rect width="64" height="64" rx="14" fill="#0d1110" />
+  <g fill="#45c7a8">
+    <rect x="18" y="18" width="7" height="28" rx="1.5" />
+    <rect x="39" y="18" width="7" height="28" rx="1.5" />
+    <polygon points="25,18 32,18 46,46 39,46" />
+  </g>
+</svg>

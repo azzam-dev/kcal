@@ -15,7 +15,6 @@ const PUBLIC_ROUTES = new Set([
   "/",
   "/login",
   "/register",
-  "/register/check-email",
   "/forgot-password",
   "/reset-password",
   "/auth/confirm",
